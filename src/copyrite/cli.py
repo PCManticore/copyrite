@@ -87,7 +87,6 @@ def _write_directory_copyrights(contribution_threshold, change_threshold,
         lines = insert_copyrights(copyrights, lines, process_missing)
 
         with open(file_path, 'wb') as stream:
-            # TODO: detect newlines
             stream.write(b"".join(lines))
 
 

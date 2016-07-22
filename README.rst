@@ -18,7 +18,6 @@ Updates copyright notices.
 
 
 * Free software: MIT license
-* Documentation: https://copyrite.readthedocs.io.
 
 
 About
@@ -28,8 +27,8 @@ This is a short tool I've built for handling missing copyright
 notices in my open source projects (mostly pylint_ and astroid_).
 The problem was that the copyright notices were too coarse,
 belonging only to the initial author of those two projects (Logilab),
-which stopped contributing that much in the past years. Since some
-contributors weren't willing to rennounce the copyright for a
+who stopped contributing that much in the past years.
+Since some contributors weren't willing to rennounce the copyright for a
 commercial entity, we found the need of a tool for updating the
 copyright notices across the board in order to reflect the reality
 of the contributions from the last year.
@@ -41,12 +40,16 @@ replaces the copyright notices it finds with more up-to-date notices.
 Features
 --------
 
-   * `concurrent`. You can use the ``--jobs`` flag for controlling
+   * `concurrent`.
+
+     You can use the ``--jobs`` flag for controlling
      the number of processes it should use for processing your file.
      Defaults to 1.
 
-   * `backend generic`. It could support multiple VCSes easily,
-     although right now it has only ``git`` support.
+   * can support multiple VCSes.
+
+     It could support multiple VCSes easily, although right now it
+     has only ``git`` support.
 
    * supports aliases
 
@@ -90,7 +93,7 @@ Features
 
    * supports thresholds for contributions
 
-     There are two flags which control how a contribution should be
+     There are two flags which control if a contribution should be
      considered. ``--contribution-threshold`` is specifying how many
      commits a contributor should have for a file in order for the
      contributions to be taken in consideration.
