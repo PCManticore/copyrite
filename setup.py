@@ -12,13 +12,8 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-extras_require = {}
-extras_require[':python_version<="3.5"'] = ['typing']
-requirements = [
-    'Click>=6.0',
-    'jsonschema',
-]
-
+with open('requirements.txt') as requirements_file:
+    requirements = requirements_file.readlines()
 
 setup(
     name='copyrite',
@@ -38,7 +33,6 @@ setup(
     },
     include_package_data=True,
     install_requires=requirements,
-    extras_require=extras_require,
     license="MIT license",
     zip_safe=False,
     keywords='copyrite',
