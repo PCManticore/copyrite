@@ -9,10 +9,6 @@ copyrite
 .. image:: https://img.shields.io/travis/PCManticore/copyrite.svg
         :target: https://travis-ci.org/PCManticore/copyrite
 
-.. image:: https://pyup.io/repos/github/PCManticore/copyrite/shield.svg
-     :target: https://pyup.io/repos/github/PCManticore/copyrite/
-     :alt: Updates
-
 
 Updates copyright notices.
 
