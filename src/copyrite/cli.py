@@ -18,6 +18,7 @@ _COPYRIGHT_HEADER_MARK = b"# Copyright (c)"
 def _has_encoding_cookie(line):
     return line.startswith(b"# -*- coding")
 
+
 def _has_non_ascii_characters(lines):
     for line in lines:
         try:

@@ -45,8 +45,10 @@ class Alias(_AliasBase):
     An alias can be viewed as an authoritative entity under
     which multiple contributions can live. For instance,
     if one user contributed to the project by using multiple e-mails,
-    the alias can be used to use only one of those names or another,
-    prespecified name.
+    the alias can be used to use only one of those emails.
+    The alias can also be used in the case of companies. For instance,
+    multiple mails for different contributors can be conflated under
+    one entity, the company's account.
     """
 
     def __new__(cls,
