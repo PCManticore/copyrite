@@ -26,6 +26,7 @@ def _write_directory_copyrights(contribution_threshold, change_threshold,
 
         file_path = futures[future]
         copyrights = future.result()
+
         copyrights = [copyright + b"\n" for copyright in copyrights]
 
         with open(file_path, 'rb') as stream:

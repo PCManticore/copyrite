@@ -11,6 +11,10 @@ from copyrite import vcs
 _ContributionSpanBase = collections.namedtuple('_ContributionSpanBase', 'author mail dates')
 _COPYRIGHT_HEADER = b"# Copyright (c) %s %s"
 
+# List of mails for which the contributions should be ignored.
+_BLACKLIST_MAILS = [b"none@none"]
+
+
 class ContributionSpan(_ContributionSpanBase):
     """Class containing the contribution dates and details of a particular author."""
 
@@ -152,4 +156,6 @@ def file_copyrights(directory: str,
 
     unflattened = [span for spans in map(contribution_spans, author_contributions)
                    for span in spans]
-    return [span.formatted() for span in sorted(unflattened, key=_order_cb)]
+    filtered_spans = [span for span in unflattened
+                      if span.mail not in _BLACKLIST_MAILS]
+    return [span.formatted() for span in sorted(filtered_spans, key=_order_cb)]
