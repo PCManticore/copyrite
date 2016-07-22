@@ -56,7 +56,6 @@ def insert_copyrights(copyrights, lines, process_missing=False):
 
         if _has_non_ascii_characters(copyrights):
             if not has_cookie:
-                print(lines[:2], has_cookie)
                 extraheader = [b"# -*- coding: utf-8 -*-\n"]
 
         lines = lines[:index] + copyrights + lines[index + len(copyright_indexes):]
