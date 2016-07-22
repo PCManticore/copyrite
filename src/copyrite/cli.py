@@ -12,7 +12,10 @@ from copyrite import alias
 from copyrite.vcs import KNOWN_BACKENDS
 
 
-_COPYRIGHT_HEADER_MARK = b"# Copyright (c)"
+_COPYRIGHT_HEADER_MARKS = [
+    b"# Copyright (c)",
+    b"# copyright "
+]
 
 
 def _has_encoding_cookie(line):
@@ -40,7 +43,7 @@ def insert_copyrights(copyrights, lines, process_missing=False):
     """
     has_cookie = _has_encoding_cookie(lines[0])
     copyright_indexes = [index for (index, line) in enumerate(lines)
-                         if line.startswith(_COPYRIGHT_HEADER_MARK)]
+                         if any(line.startswith(header) for header in _COPYRIGHT_HEADER_MARKS)]
     extraheader = []
 
     if not copyright_indexes:
@@ -96,9 +99,9 @@ def _write_directory_copyrights(contribution_threshold, change_threshold,
             for filename in filenames:
                 filepath = os.path.join(dirpath, filename)
 
-                if not fnmatch.fnmatch(filepath, include):
+                if include and not fnmatch.fnmatch(filepath, include):
                     continue
-                if fnmatch.fnmatch(filepath, exclude):
+                if exclude and fnmatch.fnmatch(filepath, exclude):
                     continue
 
                 future = executor.submit(
@@ -136,7 +139,7 @@ def _build_aliases_from_file(aliases):
 @click.option('--include', type=str, default='*.py',
               help='Include only the files which are matched '
                    'by this glob pattern.')
-@click.option('--exclude', type=str, default='*test*',
+@click.option('--exclude', type=str,
               help='Exclude the files which are matched '
                    'by this glob pattern. The exclusion '
                    'is done on the included files.')
