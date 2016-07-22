@@ -15,10 +15,59 @@ from copyrite.vcs import KNOWN_BACKENDS
 _COPYRIGHT_HEADER_MARK = b"# Copyright (c)"
 
 
+def _has_encoding_cookie(line):
+    return line.startswith(b"# -*- coding")
+
+def _has_non_ascii_characters(lines):
+    for line in lines:
+        try:
+            line.decode('ascii')
+        except UnicodeDecodeError:
+            return True
+    return False
+
+
+def insert_copyrights(copyrights, lines, process_missing=False):
+    """Insert the given copyrights into the known lines
+
+    This operation will find the proper place where the copyrights
+    can live, by replacing the current copyrights notices, if any.
+    If *process_missing* is set to True, then the copyrights can
+    be added, even if the lines don't contain any copyright notice.
+    It also handles the case of encoding cookies, if the copyrights
+    contain non ASCII characters.
+    """
+    has_cookie = _has_encoding_cookie(lines[0])
+    copyright_indexes = [index for (index, line) in enumerate(lines)
+                         if line.startswith(_COPYRIGHT_HEADER_MARK)]
+    extraheader = []
+
+    if not copyright_indexes:
+        if not process_missing:
+            return lines
+
+        # Default to beginning of file.
+        if has_cookie:
+            lines = lines[0:1] + copyrights + lines[1:]
+        else:
+            lines = copyrights + lines
+    else:
+        index = copyright_indexes[0]
+
+        if _has_non_ascii_characters(copyrights):
+            if not has_cookie:
+                print(lines[:2], has_cookie)
+                extraheader = [b"# -*- coding: utf-8 -*-\n"]
+
+        lines = lines[:index] + copyrights + lines[index + len(copyright_indexes):]
+    return extraheader + lines
+
+
 def _write_directory_copyrights(contribution_threshold, change_threshold,
                                 backend, jobs,
                                 include, exclude,
                                 aliases,
+                                process_missing,
                                 directory):
 
     def _write_to_file_cb(future):
@@ -31,14 +80,11 @@ def _write_directory_copyrights(contribution_threshold, change_threshold,
 
         with open(file_path, 'rb') as stream:
             lines = stream.readlines()
-        copyright_indexes = [index for (index, line) in enumerate(lines)
-                             if line.startswith(_COPYRIGHT_HEADER_MARK)]
-        if not copyright_indexes:
-            # TODO: Do not process files without copyright?
+
+        if not lines:
             return
 
-        index = copyright_indexes[0]
-        lines = lines[:index] + copyrights + lines[index + len(copyright_indexes):]
+        lines = insert_copyrights(copyrights, lines, process_missing)
 
         with open(file_path, 'wb') as stream:
             # TODO: detect newlines
@@ -97,6 +143,9 @@ def _build_aliases_from_file(aliases):
                    'is done on the included files.')
 @click.option('--aliases', type=click.File('r'),
               help='File containing name aliases.')
+@click.option('--process-missing', type=bool, default=False,
+              help='Add a copyright notice to files which do not '
+                   'have them.')
 @click.argument('directory')
 def main(contribution_threshold,
          change_threshold,
@@ -105,6 +154,7 @@ def main(contribution_threshold,
          include,
          exclude,
          aliases,
+         process_missing,
          directory):
     """Console script for copyrite"""
 
@@ -114,7 +164,9 @@ def main(contribution_threshold,
                                 change_threshold,
                                 backend, jobs,
                                 include, exclude,
-                                built_aliases, directory)
+                                built_aliases,
+                                process_missing,
+                                directory)
 
 
 if __name__ == "__main__":
