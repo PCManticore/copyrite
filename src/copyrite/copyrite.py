@@ -147,8 +147,9 @@ def file_copyrights(directory: str,
         change_positive_threshold,
         contributions_threshold)
 
-    return [
-        span.formatted()
-        for spans in map(contribution_spans, author_contributions)
-        for span in spans
-    ]
+    def _order_cb(span):
+        return sorted(span.dates)[0][0]
+
+    unflattened = [span for spans in map(contribution_spans, author_contributions)
+                   for span in spans]
+    return [span.formatted() for span in sorted(unflattened, key=_order_cb)]
