@@ -1,8 +1,9 @@
 """Manages aliases for different authors."""
 
 import collections
-import jsonschema
 import typing
+
+import jsonschema
 
 from copyrite import vcs
 
@@ -59,13 +60,21 @@ class Alias(_AliasBase):
     @classmethod
     def from_keys(cls, name: str,
                   mails: typing.List[str],
-                  authoritative_mail: typing.Optional[str] = None):
+                  authoritative_mail: typing.Optional[str] = None): # pylint: disable=bad-whitespace
+        """Build an alias from the given keys
 
-        name = name.encode()
-        mails = [mail.encode() for mail in mails]
-        if authoritative_mail:
-            authoritative_mail = authoritative_mail.encode()
-        return cls(name, mails, authoritative_mail)
+        Since we are using bytes internally in order to not complicate
+        ourselves with encodings and whatnot. We get bytes, we put
+        bytes into files. The only exception is when we retrieve the
+        aliases from a JSON file, which inherently contains strings.
+        Thus the need for this method, which decodes those values
+        into bytes before building the Alias object.
+        """
+
+        encoded_name = name.encode()
+        encoded_mails = [mail.encode() for mail in mails] # type: List[bytes]
+        encoded_authoritative_mail = authoritative_mail and authoritative_mail.encode()
+        return cls(encoded_name, encoded_mails, encoded_authoritative_mail)
 
 
 # pylint: disable=invalid-name

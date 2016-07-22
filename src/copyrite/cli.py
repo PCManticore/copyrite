@@ -29,13 +29,13 @@ def _directory_copyrights(contribution_threshold, change_threshold,
                 if fnmatch.fnmatch(filepath, exclude):
                     continue
 
-                futures[executor.submit(
+                future = executor.submit(
                     file_copyrights,
                     dirpath, filename, backend,
                     change_threshold,
                     contribution_threshold,
                     aliases)
-                ] = filepath
+                futures[future] = filepath
 
         for completed in concurrent.futures.as_completed(futures):
             filepath = futures[completed]

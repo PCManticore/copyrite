@@ -2,7 +2,6 @@
 
 import collections
 import itertools
-import os
 from typing import Dict, List, Iterable, Tuple, Set
 
 from copyrite import alias
@@ -123,7 +122,7 @@ def _significant_contributions(authors: AuthorContributions,
                                change_positive_threshold: int,
                                contributions_threshold: int) -> Iterable[List[vcs.Contribution]]:
 
-    for author, author_contributions in authors.items():
+    for author_contributions in authors.values():
         changes = [backend.contribution_changes(contribution, dirpath)
                    for contribution in author_contributions]
 
@@ -137,6 +136,8 @@ def file_copyrights(directory: str,
                     change_positive_threshold: int,
                     contributions_threshold: int,
                     aliases: List[alias.Alias]) -> List[bytes]:
+
+    """Generate a list of Copyright notices for the given file."""
 
     contributions = backend.file_contributions(filepath, directory)
     transformed_contributions = alias.apply_aliases(contributions, aliases)
