@@ -12,11 +12,37 @@ from copyrite import alias
 from copyrite.vcs import KNOWN_BACKENDS
 
 
-def _directory_copyrights(contribution_threshold, change_threshold,
-                          backend, jobs,
-                          include, exclude,
-                          aliases,
-                          directory):
+_COPYRIGHT_HEADER_MARK = b"# Copyright (c)"
+
+
+def _write_directory_copyrights(contribution_threshold, change_threshold,
+                                backend, jobs,
+                                include, exclude,
+                                aliases,
+                                directory):
+
+    def _write_to_file_cb(future):
+        nonlocal futures
+
+        file_path = futures[future]
+        copyrights = future.result()
+        copyrights = [copyright + b"\n" for copyright in copyrights]
+
+        with open(file_path, 'rb') as stream:
+            lines = stream.readlines()
+        copyright_indexes = [index for (index, line) in enumerate(lines)
+                             if line.startswith(_COPYRIGHT_HEADER_MARK)]
+        if not copyright_indexes:
+            # TODO: Do not process files without copyright?
+            return
+
+        index = copyright_indexes[0]
+        lines = lines[:index] + copyrights + lines[index + len(copyright_indexes):]
+
+        with open(file_path, 'wb') as stream:
+            # TODO: detect newlines
+            stream.write(b"".join(lines))
+
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=jobs) as executor:
         futures = {}
@@ -35,12 +61,12 @@ def _directory_copyrights(contribution_threshold, change_threshold,
                     change_threshold,
                     contribution_threshold,
                     aliases)
+                future.add_done_callback(_write_to_file_cb)
                 futures[future] = filepath
 
-        for completed in concurrent.futures.as_completed(futures):
-            filepath = futures[completed]
-            copyrights = completed.result()
-            yield filepath, copyrights
+        print("Start processing files..")
+        concurrent.futures.wait(futures)
+        print("Done!")
 
 
 def _build_aliases_from_file(aliases):
@@ -83,12 +109,11 @@ def main(contribution_threshold,
 
     built_aliases = _build_aliases_from_file(aliases)
     backend = KNOWN_BACKENDS[backend_type]()
-    for filepath, copyrights in _directory_copyrights(contribution_threshold,
-                                                      change_threshold,
-                                                      backend, jobs,
-                                                      include, exclude,
-                                                      built_aliases, directory):
-        print(filepath, copyrights)
+    _write_directory_copyrights(contribution_threshold,
+                                change_threshold,
+                                backend, jobs,
+                                include, exclude,
+                                built_aliases, directory)
 
 
 if __name__ == "__main__":
