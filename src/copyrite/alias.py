@@ -96,7 +96,6 @@ def _applied_aliases(candidates: _AliasContributionGroupType) -> _ContributionsI
     for contribution, alias in candidates.items():
         if alias:
             mail = alias.authoritative_mail or b''
-            name = alias.name
             yield contribution._replace(author=alias.name, mail=mail) # type: ignore
         else:
             yield contribution
