@@ -16,6 +16,7 @@ extras_require = {}
 extras_require[':python_version<="3.5"'] = ['typing']
 requirements = [
     'Click>=6.0',
+    'jsonschema',
 ]
 
 

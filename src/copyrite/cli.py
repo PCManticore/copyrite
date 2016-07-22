@@ -2,17 +2,22 @@
 
 import concurrent.futures
 import fnmatch
+import json
 import os
 
 import click
 
 from copyrite import file_copyrights
+from copyrite import alias
 from copyrite.vcs import KNOWN_BACKENDS
 
 
 def _directory_copyrights(contribution_threshold, change_threshold,
                           backend, jobs,
-                          include, exclude, directory):
+                          include, exclude,
+                          aliases,
+                          directory):
+
     with concurrent.futures.ProcessPoolExecutor(max_workers=jobs) as executor:
         futures = {}
         for dirpath, _, filenames in os.walk(directory):
@@ -29,7 +34,7 @@ def _directory_copyrights(contribution_threshold, change_threshold,
                     dirpath, filename, backend,
                     change_threshold,
                     contribution_threshold,
-                    []) # TODO: aliases
+                    aliases)
                 ] = filepath
 
         for completed in concurrent.futures.as_completed(futures):
@@ -37,6 +42,11 @@ def _directory_copyrights(contribution_threshold, change_threshold,
             copyrights = completed.result()
             yield filepath, copyrights
 
+
+def _build_aliases_from_file(aliases):
+    with aliases:
+        content = json.load(aliases)
+    return alias.build_from_json(content)
 
 
 @click.command()
@@ -58,6 +68,8 @@ def _directory_copyrights(contribution_threshold, change_threshold,
               help='Exclude the files which are matched '
                    'by this glob pattern. The exclusion '
                    'is done on the included files.')
+@click.option('--aliases', type=click.File('r'),
+              help='File containing name aliases.')
 @click.argument('directory')
 def main(contribution_threshold,
          change_threshold,
@@ -65,13 +77,17 @@ def main(contribution_threshold,
          jobs,
          include,
          exclude,
+         aliases,
          directory):
     """Console script for copyrite"""
+
+    built_aliases = _build_aliases_from_file(aliases)
     backend = KNOWN_BACKENDS[backend_type]()
     for filepath, copyrights in _directory_copyrights(contribution_threshold,
                                                       change_threshold,
                                                       backend, jobs,
-                                                      include, exclude, directory):
+                                                      include, exclude,
+                                                      built_aliases, directory):
         print(filepath, copyrights)
 
 

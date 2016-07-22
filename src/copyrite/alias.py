@@ -1,11 +1,41 @@
 """Manages aliases for different authors."""
 
 import collections
+import jsonschema
 import typing
 
 from copyrite import vcs
 
 _AliasBase = collections.namedtuple('_AliasBase', 'name mails authoritative_mail')
+ALIAS_SCHEMA = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Aliases",
+    "type": "array",
+    "items": {
+        "title": "Alias",
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string"
+            },
+            "mails": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "properties": {
+                        "mail": {
+                            "type": "string"
+                        }
+                    }
+                },
+            },
+            "authoritative_mail": {
+                "type": "string",
+            },
+        },
+        "required": ["name", "mails"]
+    }
+}
 
 
 class Alias(_AliasBase):
@@ -19,12 +49,23 @@ class Alias(_AliasBase):
     """
 
     def __new__(cls,
-                name: str,
-                mails: typing.List[str],
+                name: bytes,
+                mails: typing.List[bytes],
                 # pylint: disable=bad-whitespace; false positive
-                authoritative_mail: typing.Optional[str] = None):
+                authoritative_mail: typing.Optional[bytes] = None):
 
         return _AliasBase.__new__(cls, name, mails, authoritative_mail) # type: ignore; fp
+
+    @classmethod
+    def from_keys(cls, name: str,
+                  mails: typing.List[str],
+                  authoritative_mail: typing.Optional[str] = None):
+
+        name = name.encode()
+        mails = [mail.encode() for mail in mails]
+        if authoritative_mail:
+            authoritative_mail = authoritative_mail.encode()
+        return cls(name, mails, authoritative_mail)
 
 
 # pylint: disable=invalid-name
@@ -63,3 +104,12 @@ def apply_aliases(contributions: typing.List[vcs.Contribution],
     candidates = {contribution: _find_proper_alias(aliases, contribution)
                   for contribution in contributions}
     return list(_applied_aliases(candidates))
+
+
+def build_from_json(aliases):
+    """Build aliases from the given JSON structure.
+
+    The structure should be valid according to the underlying schema.
+    """
+    jsonschema.validate(aliases, ALIAS_SCHEMA)
+    return [Alias.from_keys(**alias) for alias in aliases]
