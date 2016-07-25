@@ -159,8 +159,11 @@ def main(contribution_threshold,
          process_missing,
          directory):
     """Console script for copyrite"""
+    if aliases:
+        built_aliases = _build_aliases_from_file(aliases)
+    else:
+        built_aliases = []
 
-    built_aliases = _build_aliases_from_file(aliases)
     backend = KNOWN_BACKENDS[backend_type]()
     _write_directory_copyrights(contribution_threshold,
                                 change_threshold,
