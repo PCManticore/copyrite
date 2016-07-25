@@ -45,3 +45,12 @@ def test_with_copyrights():
     lines = cli.insert_copyrights(copyrights, lines_with_copyright)
 
     assert lines == copyrights + lines_with_copyright[1:]
+
+
+def test_with_copyrights_without_c():
+    lines_with_copyright = [b"# Copyright 2014 Google", b"first", b"second"]
+    copyrights = [b"works"]
+
+    lines = cli.insert_copyrights(copyrights, lines_with_copyright)
+
+    assert lines == copyrights + lines_with_copyright[1:]

@@ -14,7 +14,8 @@ from copyrite.vcs import KNOWN_BACKENDS
 
 _COPYRIGHT_HEADER_MARKS = [
     b"# Copyright (c)",
-    b"# copyright "
+    b"# copyright ",
+    b"# Copyright ",
 ]
 
 
