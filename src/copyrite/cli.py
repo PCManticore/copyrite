@@ -9,6 +9,7 @@ import click
 
 from copyrite import file_copyrights
 from copyrite import alias
+from copyrite import span
 from copyrite.vcs import KNOWN_BACKENDS
 
 
@@ -32,7 +33,7 @@ def _has_non_ascii_characters(lines):
     return False
 
 
-def insert_copyrights(copyrights, lines, process_missing=False):
+def insert_copyrights(copyrights, lines, header_marks=None, process_missing=False):
     """Insert the given copyrights into the known lines
 
     This operation will find the proper place where the copyrights
@@ -42,9 +43,12 @@ def insert_copyrights(copyrights, lines, process_missing=False):
     It also handles the case of encoding cookies, if the copyrights
     contain non ASCII characters.
     """
+    if header_marks is None:
+        header_marks = _COPYRIGHT_HEADER_MARKS
+
     has_cookie = _has_encoding_cookie(lines[0])
     copyright_indexes = [index for (index, line) in enumerate(lines)
-                         if any(line.startswith(header) for header in _COPYRIGHT_HEADER_MARKS)]
+                         if any(line.startswith(header) for header in header_marks)]
     extraheader = []
 
     if not copyright_indexes:
@@ -72,15 +76,19 @@ def _write_directory_copyrights(contribution_threshold, change_threshold,
                                 include, exclude,
                                 aliases,
                                 process_missing,
+                                copyright_pattern,
+                                header_marks,
                                 directory):
 
     def _write_to_file_cb(future):
         nonlocal futures
+        nonlocal copyright_pattern
+        nonlocal header_marks
 
         file_path = futures[future]
-        copyrights = future.result()
-
-        copyrights = [copyright + b"\n" for copyright in copyrights]
+        results = future.result()
+        copyrights = [span.format_span(item, copyright_pattern) + b"\n"
+                      for item in results]
 
         with open(file_path, 'rb') as stream:
             lines = stream.readlines()
@@ -88,11 +96,12 @@ def _write_directory_copyrights(contribution_threshold, change_threshold,
         if not lines:
             return
 
-        lines = insert_copyrights(copyrights, lines, process_missing)
+        lines = insert_copyrights(copyrights, lines,
+                                  process_missing=process_missing,
+                                  header_marks=header_marks)
 
         with open(file_path, 'wb') as stream:
             stream.write(b"".join(lines))
-
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=jobs) as executor:
         futures = {}
@@ -149,6 +158,15 @@ def _build_aliases_from_file(aliases):
 @click.option('--process-missing', type=bool, default=False,
               help='Add a copyright notice to files which do not '
                    'have them.')
+@click.option('--copyright-pattern', type=str,
+              default="# Copyright (c) %s %s",
+              help='The copyright pattern which will be placed on top '
+                   'of each file. It should accept two positional '
+                   'interpolation fields, using the old style mod '
+                   'formatting. The first field represents the contribution '
+                   'spans, while the second one represents the author of '
+                   'the contributions')
+@click.option('--header-mark', multiple=True, type=str)
 @click.argument('directory')
 def main(contribution_threshold,
          change_threshold,
@@ -158,12 +176,16 @@ def main(contribution_threshold,
          exclude,
          aliases,
          process_missing,
+         copyright_pattern,
+         header_mark,
          directory):
     """Console script for copyrite"""
     if aliases:
         built_aliases = _build_aliases_from_file(aliases)
     else:
         built_aliases = []
+    header_mark = [mark.encode() for mark in header_mark]
+    header_marks = header_mark or _COPYRIGHT_HEADER_MARKS
 
     backend = KNOWN_BACKENDS[backend_type]()
     _write_directory_copyrights(contribution_threshold,
@@ -172,6 +194,8 @@ def main(contribution_threshold,
                                 include, exclude,
                                 built_aliases,
                                 process_missing,
+                                copyright_pattern,
+                                header_marks,
                                 directory)
 
 

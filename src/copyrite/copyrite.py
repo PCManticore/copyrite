@@ -5,48 +5,19 @@ import itertools
 from typing import Dict, List, Iterable, Tuple, Set
 
 from copyrite import alias
+from copyrite import span
 from copyrite import vcs
-
-
-_ContributionSpanBase = collections.namedtuple('_ContributionSpanBase', 'author mail dates')
-_COPYRIGHT_HEADER = b"# Copyright (c) %s %s"
 
 # List of mails for which the contributions should be ignored.
 _BLACKLIST_MAILS = [b"none@none"]
 
 
-class ContributionSpan(_ContributionSpanBase):
-    """Class containing the contribution dates and details of a particular author."""
-
-    def formatted(self) -> bytes:
-        """Format this contribution into a format suitable for files."""
-
-        if self.mail:
-            author = b"%s <%s>" % (self.author, self.mail)
-        else:
-            author = self.author
-        spans = _format_spans(self.dates).encode()
-        return _COPYRIGHT_HEADER % (spans, author) # type: ignore; fp
-
-
 # pylint: disable=invalid-name
-SpanList = List[ContributionSpan]
-SpanIterable = Iterable[ContributionSpan]
+SpanList = List[span.ContributionSpan]
+SpanIterable = Iterable[span.ContributionSpan]
 AuthorToDate = Dict[Tuple[str, str], Set[int]]
 AuthorContributions = Dict[str, List[vcs.Contribution]]
 # pylint: enable=invalid-name
-
-
-def _format_spans(spans: List[List[int]]) -> str:
-    ordered = sorted(spans)
-    formatted = []
-    for span in ordered:
-        if len(span) == 1:
-            formatted.append(str(span[0]))
-        else:
-            head, tail = span[0], span[-1]
-            formatted.append("{}-{}".format(head, tail))
-    return ", ".join(formatted)
 
 
 def _spans(dates):
@@ -80,7 +51,7 @@ def is_significant_change(change: vcs.ChangeDiff,
 def _contribution_spans(author_contributions: AuthorToDate) -> SpanIterable:
     for (author, mail), dates in author_contributions.items():
         ordered = sorted(set(dates))
-        yield ContributionSpan(author, mail, _spans(ordered))
+        yield span.ContributionSpan(author, mail, _spans(ordered))
 
 
 def contribution_spans(contributions: List[vcs.Contribution]) -> SpanList:
@@ -139,7 +110,7 @@ def file_copyrights(directory: str,
                     backend: vcs.VCSBackend,
                     change_positive_threshold: int,
                     contributions_threshold: int,
-                    aliases: List[alias.Alias]) -> List[bytes]:
+                    aliases: List[alias.Alias]) -> List[span.ContributionSpan]:
 
     """Generate a list of Copyright notices for the given file."""
 
@@ -151,11 +122,11 @@ def file_copyrights(directory: str,
         change_positive_threshold,
         contributions_threshold)
 
-    def _order_cb(span):
-        return sorted(span.dates)[0][0]
+    def _order_cb(item):
+        return sorted(item.dates)[0][0]
 
     unflattened = [span for spans in map(contribution_spans, author_contributions)
                    for span in spans]
     filtered_spans = [span for span in unflattened
                       if span.mail not in _BLACKLIST_MAILS]
-    return [span.formatted() for span in sorted(filtered_spans, key=_order_cb)]
+    return sorted(filtered_spans, key=_order_cb)

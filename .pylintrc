@@ -56,7 +56,7 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
-disable=old-ne-operator,filter-builtin-not-iterating,unichr-builtin,unpacking-in-except,old-octal-literal,long-builtin,metaclass-assignment,unicode-builtin,file-ignored,old-division,basestring-builtin,file-builtin,import-star-module-level,intern-builtin,using-cmp-argument,buffer-builtin,print-statement,raw-checker-failed,dict-iter-method,zip-builtin-not-iterating,cmp-builtin,apply-builtin,setslice-method,map-builtin-not-iterating,reload-builtin,oct-method,deprecated-pragma,locally-disabled,suppressed-message,indexing-exception,input-builtin,backtick,nonzero-method,xrange-builtin,long-suffix,range-builtin-not-iterating,locally-enabled,getslice-method,coerce-builtin,dict-view-method,coerce-method,useless-suppression,raising-string,parameter-unpacking,standarderror-builtin,hex-method,no-absolute-import,reduce-builtin,raw_input-builtin,delslice-method,execfile-builtin,old-raise-syntax,bad-inline-option,round-builtin,next-method-called,cmp-method
+disable=python3, too-many-arguments
 
 
 [REPORTS]
